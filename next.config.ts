@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "cdn.dummyjson.com" }],
+  },
   turbopack: {
     rules: {
       "*.css": {
