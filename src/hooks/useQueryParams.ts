@@ -6,11 +6,13 @@ export function useQueryParams() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const setParam = useCallback(
-    (key: string, value: string) => {
+  const setParams = useCallback(
+    (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) params.set(key, value);
-      else params.delete(key);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value) params.set(key, value);
+        else params.delete(key);
+      }
 
       const next = params.toString();
       if (next === searchParams.toString()) return;
@@ -22,5 +24,5 @@ export function useQueryParams() {
     [searchParams, pathname, router],
   );
 
-  return { searchParams, setParam };
+  return { searchParams, setParams };
 }

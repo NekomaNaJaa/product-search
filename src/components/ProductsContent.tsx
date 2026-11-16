@@ -4,16 +4,20 @@ import { useProductSearch } from "@/hooks/useProductSearch";
 import ProductCard from "@/components/ProductCard";
 import SearchBar from "@/components/SearchBar";
 import SortSelect from "@/components/SortSelect";
+import Pagination from "@/components/Pagination";
 
 export default function ProductsContent() {
   const {
     query,
     sort,
+    page,
+    totalPages,
     products,
     loading,
     error,
     handleSearchChange,
     handleSortChange,
+    handlePageChange,
   } = useProductSearch();
 
   return (
@@ -29,11 +33,17 @@ export default function ProductsContent() {
       {error && <p className="text-red-600">เกิดข้อผิดพลาด: {error}</p>}
       {!loading && !error && products.length === 0 && <p>ไม่พบสินค้า</p>}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
     </main>
   );
 }

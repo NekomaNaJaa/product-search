@@ -14,7 +14,7 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.thumbnail}
           alt={product.title}
           fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
           className="object-contain"
         />
       </div>
