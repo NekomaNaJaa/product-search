@@ -20,6 +20,7 @@ function SortSelect({ value, onChange }: SortSelectProps) {
         className="rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="">ไม่เรียง</option>
+        <option value="fav">รายการโปรด</option>
         <option value="asc">ราคา: น้อยไปมาก</option>
         <option value="desc">ราคา: มากไปน้อย</option>
       </select>

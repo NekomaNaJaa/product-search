@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFetch } from "@/hooks/useFetch";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useQueryParams } from "@/hooks/useQueryParams";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useFavoriteProducts } from "@/hooks/useFavoriteProducts";
 import {
+  PAGE_SIZE,
   buildProductsUrl,
   getTotalPages,
   parsePage,
@@ -13,6 +16,7 @@ import type { ProductsResponse, SortValue } from "@/types/product";
 
 export function useProductSearch() {
   const { searchParams, setParams } = useQueryParams();
+  const { favorites } = useFavorites();
 
   // sort และ page: URL เป็นแหล่งความจริง
   const sort = parseSort(searchParams.get("sort"));
@@ -22,6 +26,24 @@ export function useProductSearch() {
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const debouncedQuery = useDebounce(query.trim(), 500);
 
+  const isFavMode = sort === "fav";
+
+  // โหมดปกติ: ดึงข้อมูลสินค้าจาก API DummyJSON
+  const {
+    data,
+    loading: apiLoading,
+    error: apiError,
+  } = useFetch<ProductsResponse>(
+    isFavMode ? null : buildProductsUrl(debouncedQuery, page),
+  );
+
+  // โหมด Favorite: ดึงข้อมูลสินค้าเฉพาะรายการโปรดทั้งหมดจาก ID ที่บันทึกไว้ใน localStorage
+  const {
+    favoriteProducts,
+    loading: favLoading,
+    error: favError,
+  } = useFavoriteProducts(favorites, isFavMode);
+
   // คำค้นเปลี่ยนจริงเท่านั้นจึงรีเซ็ตกลับหน้า 1
   useEffect(() => {
     const urlQuery = searchParams.get("q") ?? "";
@@ -29,16 +51,33 @@ export function useProductSearch() {
     setParams({ q: debouncedQuery, page: "" });
   }, [debouncedQuery, searchParams, setParams]);
 
-  const { data, loading, error } = useFetch<ProductsResponse>(
-    buildProductsUrl(debouncedQuery, page),
-  );
+  // กรองสินค้าที่ชอบตามคำค้นหา (ถ้ามี)
+  const filteredFavProducts = useMemo(() => {
+    if (!isFavMode) return [];
+    if (!debouncedQuery) return favoriteProducts;
+    const q = debouncedQuery.toLowerCase();
+    return favoriteProducts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q),
+    );
+  }, [isFavMode, debouncedQuery, favoriteProducts]);
 
-  const totalPages = getTotalPages(data?.total ?? 0);
+  const totalPages = isFavMode
+    ? getTotalPages(filteredFavProducts.length)
+    : getTotalPages(data?.total ?? 0);
 
-  const products = useMemo(
-    () => sortByPrice(data?.products ?? [], sort),
-    [data, sort],
-  );
+  const products = useMemo(() => {
+    if (isFavMode) {
+      const start = (page - 1) * PAGE_SIZE;
+      return filteredFavProducts.slice(start, start + PAGE_SIZE);
+    }
+    return sortByPrice(data?.products ?? [], sort);
+  }, [isFavMode, filteredFavProducts, page, data, sort]);
+
+  const loading = isFavMode ? favLoading : apiLoading;
+  const error = isFavMode ? favError : apiError;
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -48,8 +87,14 @@ export function useProductSearch() {
   );
 
   const handleSortChange = useCallback(
-    (value: SortValue) => setParams({ sort: value }),
-    [setParams],
+    (value: SortValue) => {
+      const resetPage = value === "fav" || sort === "fav";
+      setParams({
+        sort: value,
+        page: resetPage ? "" : (page > 1 ? String(page) : ""),
+      });
+    },
+    [setParams, sort, page],
   );
 
   const handlePageChange = useCallback(

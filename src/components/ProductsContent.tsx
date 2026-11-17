@@ -29,9 +29,13 @@ export default function ProductsContent() {
         <SortSelect value={sort} onChange={handleSortChange} />
       </div>
 
-      {loading && <p>กำลังโหลด...</p>}
+      {loading && products.length === 0 && <p>กำลังโหลด...</p>}
       {error && <p className="text-red-600">เกิดข้อผิดพลาด: {error}</p>}
-      {!loading && !error && products.length === 0 && <p>ไม่พบสินค้า</p>}
+      {!loading && !error && products.length === 0 && (
+        <p className="py-8 text-center text-gray-500">
+          {sort === "fav" ? "ยังไม่มีสินค้าในรายการโปรด" : "ไม่พบสินค้า"}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((p) => (

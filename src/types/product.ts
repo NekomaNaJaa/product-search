@@ -16,4 +16,4 @@ export interface ProductsResponse {
   limit: number;
 }
 
-export type SortValue = "" | "asc" | "desc";
+export type SortValue = "" | "asc" | "desc" | "fav";

@@ -14,7 +14,7 @@ export function buildProductsUrl(query: string, page: number): string {
 }
 
 export function parseSort(raw: string | null): SortValue {
-  return raw === "asc" || raw === "desc" ? raw : "";
+  return raw === "asc" || raw === "desc" || raw === "fav" ? raw : "";
 }
 
 export function parsePage(raw: string | null): number {
@@ -27,7 +27,7 @@ export function getTotalPages(total: number): number {
 }
 
 export function sortByPrice(products: Product[], sort: SortValue): Product[] {
-  if (!sort) return products;
+  if (!sort || sort === "fav") return products;
   return [...products].sort((a, b) =>
     sort === "asc" ? a.price - b.price : b.price - a.price,
   );

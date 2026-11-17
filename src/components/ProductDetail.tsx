@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Star } from "lucide-react";
 import { useProductDetail } from "@/hooks/useProductDetail";
 import BackButton from "@/components/BackButton";
+import FavoriteButton from "@/components/FavoriteButton";
 
 export default function ProductDetail() {
   const { product, loading, error, handleBack } = useProductDetail();
@@ -29,9 +30,12 @@ export default function ProductDetail() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <span className="w-fit rounded bg-gray-200 px-2 py-0.5 text-sm capitalize">
-              {product.category}
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="w-fit rounded bg-gray-200 px-2 py-0.5 text-sm capitalize">
+                {product.category}
+              </span>
+              <FavoriteButton productId={product.id} size="lg" showLabel />
+            </div>
             <h1 className="text-3xl font-bold">{product.title}</h1>
             <p className="text-2xl font-semibold">${product.price}</p>
             <span className="flex items-center gap-1">
