@@ -21,9 +21,17 @@ export function useProductSearch() {
   // sort และ page: URL เป็นแหล่งความจริง
   const sort = parseSort(searchParams.get("sort"));
   const page = parsePage(searchParams.get("page"));
+  const urlQuery = searchParams.get("q") ?? "";
 
   // q: state สำหรับช่องพิมพ์ เริ่มจาก URL แล้วเขียนกลับหลัง debounce
-  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+  const [query, setQuery] = useState(urlQuery);
+  const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
+
+  if (urlQuery !== prevUrlQuery) {
+    setPrevUrlQuery(urlQuery);
+    setQuery(urlQuery);
+  }
+
   const debouncedQuery = useDebounce(query.trim(), 500);
 
   const isFavMode = sort === "fav";
@@ -44,12 +52,11 @@ export function useProductSearch() {
     error: favError,
   } = useFavoriteProducts(favorites, isFavMode);
 
-  // คำค้นเปลี่ยนจริงเท่านั้นจึงรีเซ็ตกลับหน้า 1
+  // คำค้นเปลี่ยนจริงเท่านั้นจึงรีเซ็ตกลับหน้า 1 และเขียนลง URL
   useEffect(() => {
-    const urlQuery = searchParams.get("q") ?? "";
     if (urlQuery === debouncedQuery) return;
     setParams({ q: debouncedQuery, page: "" });
-  }, [debouncedQuery, searchParams, setParams]);
+  }, [debouncedQuery, urlQuery, setParams]);
 
   // กรองสินค้าที่ชอบตามคำค้นหา (ถ้ามี)
   const filteredFavProducts = useMemo(() => {
@@ -91,7 +98,7 @@ export function useProductSearch() {
       const resetPage = value === "fav" || sort === "fav";
       setParams({
         sort: value,
-        page: resetPage ? "" : (page > 1 ? String(page) : ""),
+        page: resetPage ? "" : page > 1 ? String(page) : "",
       });
     },
     [setParams, sort, page],

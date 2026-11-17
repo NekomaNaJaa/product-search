@@ -181,3 +181,15 @@ src/
 - ✅ Pagination ผ่าน `?page=N`
 - ✅ ปุ่ม favorite + `useLocalStorage`
 - ✅ หน้า detail เป็น Server Component
+
+## เกณฑ์ตรวจงาน (Checklist)
+
+- [x] **พิมพ์เร็วๆ แล้ว API ไม่ถูกยิงทุกตัวอักษร:** มี `useDebounce(500ms)` หน่วงเวลาก่อนบันทึกลง URL และยิง API ค้นหา
+- [x] **Refresh หน้าแล้วค่า search กับ sort ยังอยู่:** อ่านค่าเริ่มต้นจาก `useSearchParams` ทั้ง `q`, `sort` และ `page`
+- [x] **เปลี่ยน sort แล้วไม่มี request ใหม่:** จัดเรียงราคาฝั่ง client ด้วย `sortByPrice` ใน `useMemo` โดยไม่มี request ไปยัง DummyJSON API
+- [x] **กดกลับจากหน้ารายละเอียดแล้ว state เดิมยังอยู่:** ปุ่ม `BackButton` เรียก `router.back()` และ `useProductSearch` ซิงก์ค่าจาก URL กลับเข้า state อัตโนมัติ
+- [x] **มี loading และ error state ทั้งสองหน้า:**
+  - หน้ารายการสินค้า: มี `{loading}` และ `{error}` พร้อม `<Suspense>` fallback
+  - หน้ารายละเอียดสินค้า: มี `loading.tsx` และ `not-found.tsx` รองรับการทำงานของ Server Component
+- [x] **ไม่มี warning ใน console:** จัดการ unique key ครบถ้วน, ปรับโครงสร้างการ์ดสินค้าไม่ให้ `<button>` ซ้อนใน `<a>` และไม่มี warning เรื่อง dependency array
+- [x] **ใส่ `"use client"` เฉพาะไฟล์ที่จำเป็น:** หน้า `page.tsx` ทั้งหมดและ `ProductDetail` เป็น Server Component ส่วนไฟล์ที่มี Event/Hooks (`SearchBar`, `SortSelect`, `FavoriteButton`, `BackButton`, `ProductsContent`) จึงใส่ `"use client"`

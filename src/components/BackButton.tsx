@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeftIcon } from "lucide-react";
 
@@ -15,7 +16,19 @@ export default function BackButton({
   label = "Back!",
   onClick,
 }: Props) {
+  const router = useRouter();
   const reduceMotion = useReducedMotion();
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault();
+    if (onClick) {
+      onClick();
+    } else if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(href);
+    }
+  }
 
   return (
     <motion.div
@@ -33,11 +46,7 @@ export default function BackButton({
     >
       <Link
         href={href}
-        onClick={(e) => {
-          if (!onClick) return;
-          e.preventDefault();
-          onClick();
-        }}
+        onClick={handleClick}
         className="relative inline-flex items-center overflow-hidden rounded-full border border-black px-5 py-1 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/50"
       >
         <motion.span
