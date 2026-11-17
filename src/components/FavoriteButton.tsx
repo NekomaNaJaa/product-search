@@ -1,9 +1,9 @@
 "use client";
 
 import { memo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavoriteButton } from "@/hooks/useFavoriteButton";
 
 interface FavoriteButtonProps {
   productId: number;
@@ -12,33 +12,25 @@ interface FavoriteButtonProps {
   className?: string;
 }
 
+const iconSizes = {
+  sm: "size-4",
+  md: "size-5",
+  lg: "size-5",
+};
+
+const buttonSizes = {
+  sm: "p-1.5",
+  md: "p-2",
+  lg: "px-4 py-2 gap-2 text-sm font-medium",
+};
+
 function FavoriteButton({
   productId,
   size = "md",
   showLabel = false,
   className = "",
 }: FavoriteButtonProps) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const active = isFavorite(productId);
-  const reduceMotion = useReducedMotion();
-
-  const iconSizes = {
-    sm: "size-4",
-    md: "size-5",
-    lg: "size-5",
-  };
-
-  const buttonSizes = {
-    sm: "p-1.5",
-    md: "p-2",
-    lg: "px-4 py-2 gap-2 text-sm font-medium",
-  };
-
-  function handleClick(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleFavorite(productId);
-  }
+  const { active, handleClick, reduceMotion } = useFavoriteButton(productId);
 
   return (
     <motion.button

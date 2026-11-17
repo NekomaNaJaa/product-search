@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowLeftIcon } from "lucide-react";
+import { useBackButton } from "@/hooks/useBackButton";
 
 type Props = {
   href?: string;
@@ -16,19 +16,7 @@ export default function BackButton({
   label = "Back!",
   onClick,
 }: Props) {
-  const router = useRouter();
-  const reduceMotion = useReducedMotion();
-
-  function handleClick(e: React.MouseEvent) {
-    e.preventDefault();
-    if (onClick) {
-      onClick();
-    } else if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push(href);
-    }
-  }
+  const { handleClick, reduceMotion } = useBackButton({ href, onClick });
 
   return (
     <motion.div

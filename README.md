@@ -42,7 +42,7 @@ src/
 | `useMemo`              | `useProductSearch`                                            | เรียงราคาฝั่ง client จาก `data` + `sort` โดยไม่ยิง API ใหม่ และคำนวณใหม่เมื่อสองค่านี้เปลี่ยนเท่านั้น            |
 | `useCallback`          | `useProductSearch`, `useQueryParams`                          | ดูหัวข้อด้านล่าง                                                                                                 |
 | `useSearchParams`      | `useQueryParams`                                              | อ่าน `q`, `sort` และ `page` จาก URL ทำให้ refresh/ส่งลิงก์แล้วได้ผลเดิม (ห่อ `<Suspense>` ที่ `page.tsx`)        |
-| `useRouter`            | `useQueryParams`, `BackButton`                                | `router.replace` อัปเดต URL โดยไม่เพิ่ม history, `router.back()` ในปุ่มกลับ                                      |
+| `useRouter`            | `useQueryParams`, `useBackButton`                             | `router.replace` อัปเดต URL โดยไม่เพิ่ม history, `router.back()` ในปุ่มกลับ                                      |
 | `usePathname`          | `useQueryParams`                                              | สร้าง URL ใหม่โดยคง path เดิม                                                                                    |
 | `useSyncExternalStore` | `useLocalStorage`                                             | อ่านค่าจาก `localStorage` และตรวจจับสถานะ client mount เพื่อป้องกัน hydration mismatch ใน Next.js และ sync ทันที |
 
@@ -50,10 +50,13 @@ src/
 
 - `useLocalStorage(key, initialValue)` จัดการอ่าน/เขียนข้อมูลลง `localStorage` รองรับ SSR ของ Next.js และ sync ข้ามแท็บ/ข้ามคอมโพเนนต์ด้วย custom event
 - `useFavorites()` จัดการ logic ของรายการโปรด (เก็บเฉพาะ Product ID) ให้บริการ `isFavorite(id)` และ `toggleFavorite(id)`
+- `useFavoriteButton(productId)` รวม logic ของปุ่มหัวใจ: ตรวจสอบสถานะ active, จัดการ event คลิก และ reduced motion
 - `useFavoriteProducts(favorites, enabled)` ดึงข้อมูลสินค้าที่ชอบทั้งหมดตาม ID เมื่อเลือกดูรายการโปรด (`?sort=fav`) พร้อม AbortController
 - `useFetch(url)` คืน `{ data, loading, error }` ใช้ในหน้า list ดึงข้อมูลสินค้าจาก DummyJSON ใช้ `AbortController` ยกเลิก request เก่าเมื่อ url เปลี่ยน เพื่อกัน race condition และเช็ก `res.ok`
 - `useDebounce(value, delay)` ค่าจะอัปเดตเมื่อหยุดเปลี่ยนครบ `delay` (500ms)
 - `useAutoFocus` ส่ง ref กลับมา focus ช่องค้นหาตอนโหลดหน้า
+- `useSearchBar({ onChange })` รวม logic ช่องค้นหา: auto-focus และเคลียร์คำค้นหาพร้อมดึง cursor กลับมาโฟกัส
+- `useBackButton(options)` จัดการ navigation logic ย้อนกลับ (`router.back()` หรือ fallback URL) และ reduced motion
 - `useQueryParams` อ่าน/เขียน URL ที่เดียว
 - `useProductSearch` รวม logic ทั้งหน้า list (รวมถึงการรองรับโหมดรายการโปรด `sort=fav`)
 
@@ -127,8 +130,9 @@ src/
 | `hooks/useLocalStorage.ts`      | Generic hook จัดการอ่าน/เขียน `localStorage` รองรับ Next.js SSR ด้วย `useSyncExternalStore` (Hydration-safe), ซิงก์ข้ามแท็บด้วย `storage` และซิงก์ในหน้าเดียวกันด้วย `local-storage` event |
 | `hooks/useFavorites.ts`         | จัดการ logic รายการโปรด เช่น ตรวจสอบสถานะ `isFavorite(id)`, สลับสถานะ `toggleFavorite(id)` และให้ array `favorites`                                                                        |
 | `hooks/useFavoriteProducts.ts`  | จัดการดึงข้อมูลสินค้าตาม ID เฉพาะเมื่ออยู่ในโหมด `sort=fav` พร้อมระบบ in-memory cache และ `AbortController`                                                                                |
+| `hooks/useFavoriteButton.ts`    | จัดการ event คลิก, การตรวจสอบสถานะ active และ reduced motion สำหรับปุ่มหัวใจ                                                                                                               |
 | `hooks/useProductSearch.ts`     | ผสานโหมด `sort=fav` เข้ากับระบบค้นหา, คำนวณจำนวนหน้า และการสลับหน้า                                                                                                                        |
-| `components/FavoriteButton.tsx` | ปุ่ม UI หัวใจล้วน มีแอนิเมชัน spring, รองรับทั้งขนาดเล็กบนการ์ดและขนาดใหญ่พร้อมข้อความในหน้า detail                                                                                        |
+| `components/FavoriteButton.tsx` | ปุ่ม UI หัวใจล้วน มีแอนิเมชัน spring, รองรับทั้งขนาดเล็กบนการ์ดและขนาดใหญ่พร้อมข้อความในหน้า detail (รับ logic จาก hook)                                                                 |
 
 ### UI และลูกเล่น
 

@@ -51,3 +51,13 @@ export function getPageItems(
   if (end < totalPages) items.push(totalPages);
   return items;
 }
+
+export async function getProduct(id: string): Promise<Product | null> {
+  try {
+    const res = await fetch(`${PRODUCTS_API}/${id}`);
+    if (!res.ok) return null;
+    return (await res.json()) as Product;
+  } catch {
+    return null;
+  }
+}

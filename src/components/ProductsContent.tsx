@@ -5,6 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import SearchBar from "@/components/SearchBar";
 import SortSelect from "@/components/SortSelect";
 import Pagination from "@/components/Pagination";
+import LoadingState from "@/components/LoadingState";
 
 export default function ProductsContent() {
   const {
@@ -29,7 +30,7 @@ export default function ProductsContent() {
         <SortSelect value={sort} onChange={handleSortChange} />
       </div>
 
-      {loading && products.length === 0 && <p>กำลังโหลด...</p>}
+      {loading && <LoadingState />}
       {error && <p className="text-red-600">เกิดข้อผิดพลาด: {error}</p>}
       {!loading && !error && products.length === 0 && (
         <p className="py-8 text-center text-gray-500">
@@ -37,11 +38,13 @@ export default function ProductsContent() {
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
+      {!loading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      )}
 
       <Pagination
         page={page}

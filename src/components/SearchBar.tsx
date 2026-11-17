@@ -1,6 +1,8 @@
+"use client";
+
 import { memo } from "react";
 import { Search, X } from "lucide-react";
-import { useAutoFocus } from "@/hooks/useAutoFocus";
+import { useSearchBar } from "@/hooks/useSearchBar";
 
 interface SearchBarProps {
   value: string;
@@ -8,12 +10,7 @@ interface SearchBarProps {
 }
 
 function SearchBar({ value, onChange }: SearchBarProps) {
-  const inputRef = useAutoFocus<HTMLInputElement>();
-
-  function handleClear() {
-    onChange("");
-    inputRef.current?.focus();
-  }
+  const { inputRef, handleClear } = useSearchBar({ onChange });
 
   return (
     <div className="relative w-full sm:max-w-sm">
