@@ -23,41 +23,39 @@ npm run dev
 ```
 src/
 ├─ app/products/page.tsx        หน้า list (Server Component ห่อ Suspense)
-├─ app/products/[id]/page.tsx   หน้า detail
+├─ app/products/[id]/page.tsx   หน้า detail (Server Component ดึงข้อมูลด้วย async/await)
 ├─ components/                  UI ล้วน
 │  └─ ui/                       คอมโพเนนต์ที่ shadcn CLI สร้าง (button, pagination)
 ├─ hooks/                       custom hooks (logic ทั้งหมด)
 └─ lib/                         ฟังก์ชันล้วน (products.ts) และ cn() (utils.ts)
 ```
 
-หลักการ: component ทำหน้าที่แสดงผล ส่วน logic อยู่ใน custom hook และฟังก์ชันล้วน
+หลักการ: component ทำหน้าที่แสดงผล ส่วน logic อยู่ใน custom hook และฟังก์ชันล้วน (หน้า detail ดึงข้อมูลบน Server โดยตรง)
 
 ## Hook ที่ใช้และเหตุผล
 
-| Hook              | ใช้ที่ไหน                                                     | ทำไม                                                                                                      |
-| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `useState`        | `useFetch`, `useDebounce`, `useProductSearch`                 | เก็บ data/loading/error, ค่าที่ debounce แล้ว และข้อความในช่องค้นหา                                       |
-| `useEffect`       | `useFetch`, `useDebounce`, `useAutoFocus`, `useProductSearch` | ดึงข้อมูลเมื่อ URL เปลี่ยน, ตั้ง/ล้าง timer, focus ตอน mount, เขียน q ลง URL                              |
-| `useRef`          | `useAutoFocus`                                                | อ้างอิง input เพื่อ `.focus()` โดยไม่ทำให้ re-render                                                      |
-| `useMemo`         | `useProductSearch`                                            | เรียงราคาฝั่ง client จาก `data` + `sort` โดยไม่ยิง API ใหม่ และคำนวณใหม่เมื่อสองค่านี้เปลี่ยนเท่านั้น     |
-| `useCallback`     | `useProductSearch`, `useQueryParams`, `useProductDetail`      | ดูหัวข้อด้านล่าง                                                                                          |
-| `useSearchParams` | `useQueryParams`                                              | อ่าน `q`, `sort` และ `page` จาก URL ทำให้ refresh/ส่งลิงก์แล้วได้ผลเดิม (ห่อ `<Suspense>` ที่ `page.tsx`) |
-| `useRouter`       | `useQueryParams`, `useProductDetail`                          | `router.replace` อัปเดต URL โดยไม่เพิ่ม history, `router.back()` ในหน้า detail                            |
-| `usePathname`     | `useQueryParams`                                              | สร้าง URL ใหม่โดยคง path เดิม                                                                             |
-| `useParams`       | `useProductDetail`                                            | อ่าน `id` จาก `/products/[id]`                                                                            |
-| `useSyncExternalStore` | `useLocalStorage`                                         | อ่านค่าจาก `localStorage` และตรวจจับสถานะ client mount เพื่อป้องกัน hydration mismatch ใน Next.js และ sync ทันที |
+| Hook                   | ใช้ที่ไหน                                                     | ทำไม                                                                                                             |
+| ---------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `useState`             | `useFetch`, `useDebounce`, `useProductSearch`                 | เก็บ data/loading/error, ค่าที่ debounce แล้ว และข้อความในช่องค้นหา                                              |
+| `useEffect`            | `useFetch`, `useDebounce`, `useAutoFocus`, `useProductSearch` | ดึงข้อมูลเมื่อ URL เปลี่ยน, ตั้ง/ล้าง timer, focus ตอน mount, เขียน q ลง URL                                     |
+| `useRef`               | `useAutoFocus`                                                | อ้างอิง input เพื่อ `.focus()` โดยไม่ทำให้ re-render                                                             |
+| `useMemo`              | `useProductSearch`                                            | เรียงราคาฝั่ง client จาก `data` + `sort` โดยไม่ยิง API ใหม่ และคำนวณใหม่เมื่อสองค่านี้เปลี่ยนเท่านั้น            |
+| `useCallback`          | `useProductSearch`, `useQueryParams`                          | ดูหัวข้อด้านล่าง                                                                                                 |
+| `useSearchParams`      | `useQueryParams`                                              | อ่าน `q`, `sort` และ `page` จาก URL ทำให้ refresh/ส่งลิงก์แล้วได้ผลเดิม (ห่อ `<Suspense>` ที่ `page.tsx`)        |
+| `useRouter`            | `useQueryParams`, `BackButton`                                | `router.replace` อัปเดต URL โดยไม่เพิ่ม history, `router.back()` ในปุ่มกลับ                                      |
+| `usePathname`          | `useQueryParams`                                              | สร้าง URL ใหม่โดยคง path เดิม                                                                                    |
+| `useSyncExternalStore` | `useLocalStorage`                                             | อ่านค่าจาก `localStorage` และตรวจจับสถานะ client mount เพื่อป้องกัน hydration mismatch ใน Next.js และ sync ทันที |
 
 ### Custom hooks
 
 - `useLocalStorage(key, initialValue)` จัดการอ่าน/เขียนข้อมูลลง `localStorage` รองรับ SSR ของ Next.js และ sync ข้ามแท็บ/ข้ามคอมโพเนนต์ด้วย custom event
 - `useFavorites()` จัดการ logic ของรายการโปรด (เก็บเฉพาะ Product ID) ให้บริการ `isFavorite(id)` และ `toggleFavorite(id)`
 - `useFavoriteProducts(favorites, enabled)` ดึงข้อมูลสินค้าที่ชอบทั้งหมดตาม ID เมื่อเลือกดูรายการโปรด (`?sort=fav`) พร้อม AbortController
-- `useFetch(url)` คืน `{ data, loading, error }` ใช้ทั้งสองหน้า ใช้ `AbortController` ยกเลิก request เก่าเมื่อ url เปลี่ยน เพื่อกัน race condition (ไม่แสดง `AbortError` เป็น error) และเช็ก `res.ok` เพราะ `fetch` ไม่ throw เมื่อได้ 404/500
+- `useFetch(url)` คืน `{ data, loading, error }` ใช้ในหน้า list ดึงข้อมูลสินค้าจาก DummyJSON ใช้ `AbortController` ยกเลิก request เก่าเมื่อ url เปลี่ยน เพื่อกัน race condition และเช็ก `res.ok`
 - `useDebounce(value, delay)` ค่าจะอัปเดตเมื่อหยุดเปลี่ยนครบ `delay` (500ms)
 - `useAutoFocus` ส่ง ref กลับมา focus ช่องค้นหาตอนโหลดหน้า
 - `useQueryParams` อ่าน/เขียน URL ที่เดียว
 - `useProductSearch` รวม logic ทั้งหน้า list (รวมถึงการรองรับโหมดรายการโปรด `sort=fav`)
-- `useProductDetail` ดึงสินค้าจาก id และจัดการปุ่มกลับ
 
 ## ทำไมใช้ `useCallback`
 
@@ -124,13 +122,13 @@ src/
 
 ### การแยก logic ออกจาก UI
 
-| ไฟล์                           | หน้าที่                                                                                                                                                                                        |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `hooks/useLocalStorage.ts`     | Generic hook จัดการอ่าน/เขียน `localStorage` รองรับ Next.js SSR ด้วย `useSyncExternalStore` (Hydration-safe), ซิงก์ข้ามแท็บด้วย `storage` และซิงก์ในหน้าเดียวกันด้วย `local-storage` event |
-| `hooks/useFavorites.ts`        | จัดการ logic รายการโปรด เช่น ตรวจสอบสถานะ `isFavorite(id)`, สลับสถานะ `toggleFavorite(id)` และให้ array `favorites`                                                                         |
-| `hooks/useFavoriteProducts.ts` | จัดการดึงข้อมูลสินค้าตาม ID เฉพาะเมื่ออยู่ในโหมด `sort=fav` พร้อมระบบ in-memory cache และ `AbortController`                                                                                    |
-| `hooks/useProductSearch.ts`    | ผสานโหมด `sort=fav` เข้ากับระบบค้นหา, คำนวณจำนวนหน้า และการสลับหน้า                                                                                                                           |
-| `components/FavoriteButton.tsx`| ปุ่ม UI หัวใจล้วน มีแอนิเมชัน spring, รองรับทั้งขนาดเล็กบนการ์ดและขนาดใหญ่พร้อมข้อความในหน้า detail                                                                                           |
+| ไฟล์                            | หน้าที่                                                                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `hooks/useLocalStorage.ts`      | Generic hook จัดการอ่าน/เขียน `localStorage` รองรับ Next.js SSR ด้วย `useSyncExternalStore` (Hydration-safe), ซิงก์ข้ามแท็บด้วย `storage` และซิงก์ในหน้าเดียวกันด้วย `local-storage` event |
+| `hooks/useFavorites.ts`         | จัดการ logic รายการโปรด เช่น ตรวจสอบสถานะ `isFavorite(id)`, สลับสถานะ `toggleFavorite(id)` และให้ array `favorites`                                                                        |
+| `hooks/useFavoriteProducts.ts`  | จัดการดึงข้อมูลสินค้าตาม ID เฉพาะเมื่ออยู่ในโหมด `sort=fav` พร้อมระบบ in-memory cache และ `AbortController`                                                                                |
+| `hooks/useProductSearch.ts`     | ผสานโหมด `sort=fav` เข้ากับระบบค้นหา, คำนวณจำนวนหน้า และการสลับหน้า                                                                                                                        |
+| `components/FavoriteButton.tsx` | ปุ่ม UI หัวใจล้วน มีแอนิเมชัน spring, รองรับทั้งขนาดเล็กบนการ์ดและขนาดใหญ่พร้อมข้อความในหน้า detail                                                                                        |
 
 ### UI และลูกเล่น
 
@@ -140,13 +138,36 @@ src/
 - หน้ารายละเอียดสินค้า (`ProductDetail`): มีปุ่มพร้อมป้ายสถานะ ("เพิ่มในรายการโปรด" / "ถูกใจแล้ว") ข้างหมวดหมู่สินค้า
 - รองรับ Accessibility อย่างครบถ้วนด้วย `aria-label`, `aria-pressed` และ `focus-visible`
 
+## หน้ารายละเอียดเป็น Server Component
+
+เปลี่ยนหน้ารายละเอียดสินค้า (`src/app/products/[id]/page.tsx` และ `src/components/ProductDetail.tsx`) ให้เป็น Server Component เพื่อดึงข้อมูลสินค้าตรงจาก Server
+
+### การทำงาน
+
+- `page.tsx` เป็น `async function` ดึง `id` จาก `params` (ใช้ `await params` ตามมาตรฐาน Next.js 15+)
+- ยิง `fetch` ตรงจาก Server ไปยัง DummyJSON API
+- หากไม่พบสินค้า จะเรียก `notFound()` เพื่อแสดงหน้า 404 ของระบบ
+- ส่งข้อมูล `product` ให้ `ProductDetail` แสดงผลเป็น HTML ทันที โดยคอมโพเนนต์นี้ไม่มี `"use client"` และไม่ต้องมี state `loading`/`error` อีกต่อไป
+- จุดที่มี User Interaction อย่าง `BackButton` (animation และประวัติการย้อนกลับ) และ `FavoriteButton` (localStorage และการคลิก) ยังคงเป็น Client Component (`"use client"`) แทรกอยู่ภายใน Server Component ได้อย่างถูกต้อง
+
+### เปรียบเทียบ: Server Component ต่างจากแบบเดิม (Client Component) อย่างไร?
+
+| มิติ                       | แบบเดิม (Client Component)                                                                            | แบบใหม่ (Server Component)                                                                                     |
+| :------------------------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| **จุดที่เกิดการ Fetch**    | ยิง API จาก **เบราว์เซอร์ของผู้ใช้** หลัง JavaScript โหลดเสร็จและเมานต์ (`useEffect`)                 | ยิง API บน **Server ของ Next.js** ตั้งแต่ตอนสร้างหน้าเว็บด้วย `async/await`                                    |
+| **ประสบการณ์ผู้ใช้ (UX)**  | ผู้ใช้จะเห็นหน้าเปล่าหรือข้อความ `"กำลังโหลด..."` ก่อนสักครู่ก่อนที่สินค้าจะปรากฏ                     | ผู้ใช้ได้รับหน้าเว็บที่มีรูปภาพและเนื้อหาสินค้าครบถ้วนทันที (Instant First Contentful Paint)                   |
+| **SEO และ Social Sharing** | Web Crawlers/บอทค้นหาอาจมองไม่เห็นเนื้อหาเพราะต้องรอรัน JavaScript ฝั่ง Client                        | **ดีขึ้นชัดเจน** ข้อมูลสินค้าอยู่ใน Initial HTML ตั้งแต่แรก บอทเก็บข้อมูลได้ทันที และทำ Dynamic Metadata ได้   |
+| **ขนาด JS Bundle**         | ขนาดใหญ่กว่า เพราะต้องส่งโค้ด `useFetch`, `useState`, `useEffect` และ Logic อื่นๆ ไปให้เบราว์เซอร์รัน | **เบาลง** ไม่ต้องส่งโค้ด Fetch/Data Logic ไปฝั่ง Client ทำให้เบราว์เซอร์ไม่ต้องโหลดโค้ดส่วนนี้                 |
+| **โครงสร้างคอมโพเนนต์**    | รวม State, Effect, Navigation และ UI ไว้ในคอมโพเนนต์เดียวกันผ่าน custom hook                          | แยกชัดเจน: หน้าและโครงสร้างหลักเป็น Server Component ส่วนจุดที่มี interactivity แยกเป็น Client Component ย่อยๆ |
+
 ## การตัดสินใจออกแบบ
 
 - `sort` อ่านจาก URL อย่างเดียว ไม่มี state แยก เพื่อไม่ให้ข้อมูลสองที่ไม่ตรงกัน ค่าที่ไม่ถูกต้อง (เช่น `?sort=abc`) ถือเหมือนไม่มี sort
 - `sort=fav` แสดงเฉพาะสินค้าที่กด Favorite ไว้ทั้งหมด (ดึงข้อมูลตาม ID ที่บันทึกไว้ใน localStorage) โดยการสลับเข้าหรือออกจากโหมด `fav` จะรีเซ็ตกลับหน้า 1 อัตโนมัติ
 - `q` มี state สำหรับช่องพิมพ์ (ให้ตอบสนองทันที) แล้วเขียนลง URL หลัง debounce 500ms
 - ใช้ `router.replace` ไม่ใช่ `push` เพื่อไม่ให้พิมพ์ทีละคำสร้าง history
-- `"use client"` ใส่เฉพาะไฟล์ที่เป็นขอบเขตจาก Server Component (`ProductsContent`, `ProductDetail`) ส่วน hook/component ลูกถูก import จาก client อยู่แล้ว
+- `"use client"` ใส่เฉพาะไฟล์ที่เป็นขอบเขตฝั่ง Client จริงๆ (`ProductsContent`, `FavoriteButton`, `BackButton`, `SearchBar`, `SortSelect`) ส่วนหน้าและเนื้อหา detail เป็น Server Component
+- หน้ารายละเอียดสินค้าดึงข้อมูลบน Server โดยตรง หากสินค้าไม่มีอยู่จริงจะตัดเข้าสู่ `notFound()` ทันที
 
 ## ข้อจำกัดที่ทราบ
 
@@ -159,4 +180,4 @@ src/
 
 - ✅ Pagination ผ่าน `?page=N`
 - ✅ ปุ่ม favorite + `useLocalStorage`
-- ⬜ หน้า detail เป็น Server Component
+- ✅ หน้า detail เป็น Server Component
