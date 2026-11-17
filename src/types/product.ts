@@ -7,6 +7,7 @@ export interface Product {
   rating: number;
   thumbnail: string;
   images: string[];
+  tags?: string[];
 }
 
 export interface ProductsResponse {

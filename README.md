@@ -54,6 +54,7 @@ src/
 - `useFavoriteProducts(favorites, enabled)` ดึงข้อมูลสินค้าที่ชอบทั้งหมดตาม ID เมื่อเลือกดูรายการโปรด (`?sort=fav`) พร้อม AbortController
 - `useFetch(url)` คืน `{ data, loading, error }` ใช้ในหน้า list ดึงข้อมูลสินค้าจาก DummyJSON ใช้ `AbortController` ยกเลิก request เก่าเมื่อ url เปลี่ยน เพื่อกัน race condition และเช็ก `res.ok`
 - `useDebounce(value, delay)` ค่าจะอัปเดตเมื่อหยุดเปลี่ยนครบ `delay` (500ms)
+- `useCombinedProducts(query, page, enabled)` ดึงข้อมูลสินค้าโดยผสานผลลัพธ์จากทั้ง Keyword Search (`/products/search?q=...`) และการจับคู่ Tag ชื่อเต็ม (Exact tag match) จากรายการสินค้าทั้งหมด พร้อมตัดรายการที่ซ้ำออก เพื่อให้ได้สินค้าที่ตรงทั้ง Product Title และ Tag อย่างครบถ้วน
 - `useAutoFocus` ส่ง ref กลับมา focus ช่องค้นหาตอนโหลดหน้า
 - `useSearchBar({ onChange })` รวม logic ช่องค้นหา: auto-focus และเคลียร์คำค้นหาพร้อมดึง cursor กลับมาโฟกัส
 - `useBackButton(options)` จัดการ navigation logic ย้อนกลับ (`router.back()` หรือ fallback URL) และ reduced motion
@@ -169,6 +170,10 @@ src/
 - `sort` อ่านจาก URL อย่างเดียว ไม่มี state แยก เพื่อไม่ให้ข้อมูลสองที่ไม่ตรงกัน ค่าที่ไม่ถูกต้อง (เช่น `?sort=abc`) ถือเหมือนไม่มี sort
 - `sort=fav` แสดงเฉพาะสินค้าที่กด Favorite ไว้ทั้งหมด (ดึงข้อมูลตาม ID ที่บันทึกไว้ใน localStorage) โดยการสลับเข้าหรือออกจากโหมด `fav` จะรีเซ็ตกลับหน้า 1 อัตโนมัติ
 - `q` มี state สำหรับช่องพิมพ์ (ให้ตอบสนองทันที) แล้วเขียนลง URL หลัง debounce 500ms
+- **ค้นหาแบบผสานทั้งสองทาง (Combined Tag & Keyword Search):** เปลี่ยนจากค้นหาหมวดหมู่มาเป็นการค้นหาด้วย **Tag** แทน โดยมีเงื่อนไขดังนี้:
+  1. **ค้นหา Tag ด้วยชื่อเต็ม (Exact Match):** ต้องพิมพ์ตรงกับชื่อ Tag เต็มๆ (เช่น `beauty`, `mascara`, `fragrances`) ถึงจะนับว่าตรงกับ Tag นั้น
+  2. **แสดงผลลัพธ์ทั้ง 2 ทาง (Title + Tag):** ค้นหาพร้อมกันทั้งสินค้าที่มี `title` ตรงกับคำค้นหา (ผ่าน Search API) และสินค้าที่มี `tags` ชื่อเต็มตรงกับคำค้นหา โดยนำผลลัพธ์มารวมกันและตัดรายการที่ซ้ำออก
+  3. **แสดง Tag บนหน้าสินค้า:** แสดงแท็กของสินค้าทั้งบนการ์ดสินค้า (`ProductCard`) และหน้ารายละเอียดสินค้า (`ProductDetail`)
 - ใช้ `router.replace` ไม่ใช่ `push` เพื่อไม่ให้พิมพ์ทีละคำสร้าง history
 - `"use client"` ใส่เฉพาะไฟล์ที่เป็นขอบเขตฝั่ง Client จริงๆ (`ProductsContent`, `FavoriteButton`, `BackButton`, `SearchBar`, `SortSelect`) ส่วนหน้าและเนื้อหา detail เป็น Server Component
 - หน้ารายละเอียดสินค้าดึงข้อมูลบน Server โดยตรง หากสินค้าไม่มีอยู่จริงจะตัดเข้าสู่ `notFound()` ทันที

@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useFetch } from "@/hooks/useFetch";
+import { useCombinedProducts } from "@/hooks/useCombinedProducts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFavoriteProducts } from "@/hooks/useFavoriteProducts";
 import {
   PAGE_SIZE,
-  buildProductsUrl,
   getTotalPages,
   parsePage,
   parseSort,
   sortByPrice,
 } from "@/lib/products";
-import type { ProductsResponse, SortValue } from "@/types/product";
+import type { SortValue } from "@/types/product";
 
 export function useProductSearch() {
   const { searchParams, setParams } = useQueryParams();
@@ -27,6 +26,7 @@ export function useProductSearch() {
   const [query, setQuery] = useState(urlQuery);
   const [prevUrlQuery, setPrevUrlQuery] = useState(urlQuery);
 
+  // ปรับ state ทันทีระหว่าง render เมื่อ URL มีการเปลี่ยนแปลง (เช่น ตอนกดย้อนกลับ router.back())
   if (urlQuery !== prevUrlQuery) {
     setPrevUrlQuery(urlQuery);
     setQuery(urlQuery);
@@ -36,14 +36,12 @@ export function useProductSearch() {
 
   const isFavMode = sort === "fav";
 
-  // โหมดปกติ: ดึงข้อมูลสินค้าจาก API DummyJSON
+  // โหมดปกติ: ดึงข้อมูลสินค้าโดยค้นหาพร้อมกันทั้งจาก Title และจาก Tag ชื่อเต็ม (ตัดตัวซ้ำออก)
   const {
     data,
     loading: apiLoading,
     error: apiError,
-  } = useFetch<ProductsResponse>(
-    isFavMode ? null : buildProductsUrl(debouncedQuery, page),
-  );
+  } = useCombinedProducts(debouncedQuery, page, !isFavMode);
 
   // โหมด Favorite: ดึงข้อมูลสินค้าเฉพาะรายการโปรดทั้งหมดจาก ID ที่บันทึกไว้ใน localStorage
   const {
@@ -58,17 +56,16 @@ export function useProductSearch() {
     setParams({ q: debouncedQuery, page: "" });
   }, [debouncedQuery, urlQuery, setParams]);
 
-  // กรองสินค้าที่ชอบตามคำค้นหา (ถ้ามี)
+  // กรองสินค้าที่ชอบตามคำค้นหา (ตรงกับ Title หรือตรงกับ Tag ชื่อเต็ม)
   const filteredFavProducts = useMemo(() => {
     if (!isFavMode) return [];
     if (!debouncedQuery) return favoriteProducts;
     const q = debouncedQuery.toLowerCase();
-    return favoriteProducts.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q),
-    );
+    return favoriteProducts.filter((p) => {
+      const titleMatch = p.title.toLowerCase().includes(q);
+      const tagMatch = p.tags?.some((tag) => tag.toLowerCase() === q);
+      return titleMatch || tagMatch;
+    });
   }, [isFavMode, debouncedQuery, favoriteProducts]);
 
   const totalPages = isFavMode
@@ -98,7 +95,7 @@ export function useProductSearch() {
       const resetPage = value === "fav" || sort === "fav";
       setParams({
         sort: value,
-        page: resetPage ? "" : page > 1 ? String(page) : "",
+        page: resetPage ? "" : (page > 1 ? String(page) : ""),
       });
     },
     [setParams, sort, page],

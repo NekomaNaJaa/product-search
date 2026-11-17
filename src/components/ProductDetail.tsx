@@ -32,6 +32,18 @@ export default function ProductDetail({ product }: { product: Product }) {
             <FavoriteButton productId={product.id} size="lg" showLabel />
           </div>
           <h1 className="text-3xl font-bold">{product.title}</h1>
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {product.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-s font-medium text-blue-700"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-2xl font-semibold">${product.price}</p>
           <span className="flex items-center gap-1">
             <Star

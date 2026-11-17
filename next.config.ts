@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
     agentFeedback: true,
   },
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "cdn.dummyjson.com" }],
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.dummyjson.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+    ],
   },
   turbopack: {
     rules: {

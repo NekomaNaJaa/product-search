@@ -35,8 +35,20 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.title}
           </Link>
         </h2>
+        {product.tags && product.tags.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {product.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded bg-gray-100 px-1.5 py-0.5 text-[14px] font-medium text-gray-600"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-      <div className="mt-1 flex items-center justify-between text-sm">
+      <div className="mt-2 flex items-center justify-between text-sm">
         <span className="font-semibold">${product.price}</span>
         <span className="flex items-center gap-1">
           <Star
